@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聊天机器人</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            color: #333;
+        }
+        .chat-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+        }
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            max-width: 70%;
+        }
+        .message.user {
+            background-color: #007BFF;
+            color: #fff;
+            align-self: flex-end;
+        }
+        .message.bot {
+            background-color: #f1f1f1;
+            color: #333;
+            align-self: flex-start;
+        }
+        .input-group {
+            display: flex;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007BFF;
+            color: #fff;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #007BFF;
+            width: 20px;
+            height: 20px;
+            animation: spin 2s linear infinite;
+            display: none;
+            align-self: center;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        async function sendMessage() {
+            const message = document.getElementById('message').value;
+            if (!message) return;
+
+            const messagesContainer = document.getElementById('messages');
+            const loader = document.getElementById('loader');
+
+            // Display user message
+            const userMessageElement = document.createElement('div');
+            userMessageElement.className = 'message user';
+            userMessageElement.innerText = message;
+            messagesContainer.appendChild(userMessageElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            document.getElementById('message').value = '';
+
+            // Show loader
+            loader.style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+                loader.style.display = 'none';
+
+                // Display bot response
+                const botMessageElement = document.createElement('div');
+                botMessageElement.className = 'message bot';
+                botMessageElement.innerText = data.response;
+                messagesContainer.appendChild(botMessageElement);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } catch (error) {
+                loader.style.display = 'none';
+                const errorMessageElement = document.createElement('div');
+                errorMessageElement.className = 'message bot';
+                errorMessageElement.innerText = '错误: ' + error.message;
+                messagesContainer.appendChild(errorMessageElement);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>聊天机器人</h1>
+        <div id="messages" class="messages"></div>
+        <div class="input-group">
+            <input type="text" id="message" placeholder="输入你的消息">
+            <button onclick="sendMessage()">发送</button>
+            <div id="loader" class="loader"></div>
+        </div>
+    </div>
+</body>
+</html>
